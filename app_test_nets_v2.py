@@ -396,7 +396,7 @@ elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
 
     cap.release()
 
-IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
+
 if not IS_CLOUD:
     cam = cv2.VideoCapture(0)
     stframe = st.empty()
