@@ -8,4 +8,4 @@ pandas
 pydeck
 matplotlib
 seaborn
-d2l==1.0.3
+d2l
