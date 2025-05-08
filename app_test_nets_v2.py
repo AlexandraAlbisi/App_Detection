@@ -48,10 +48,10 @@ model_paths = {
     "YOLOv5 Small": "models_yolo/yolov5su.pt",
     "YOLOv8 Small": "models_yolo/yolov8n-oiv7.pt",
     "YOLOv8 Extra Large": "models_yolo/yolov8x-oiv7.pt",
-    "YOLOv8_10 Net Detector": "/Users/vultureanu-albisialexandra/Desktop/BIP_2025/bip_app/app_streamlit/runs/detect/train/weights/best.pt",
-    "YOLOv8_25 Net Detector": "/Users/vultureanu-albisialexandra/Desktop/BIP_2025/bip_app/app_streamlit/runs/detect/train2/weights/best.pt",
-    "YOLOv8_50 Net Detector": "/Users/vultureanu-albisialexandra/Desktop/BIP_2025/bip_app/app_streamlit/runs/detect/train3/weights/best.pt",
-    "YOLOv8_75 Net Detector": "/Users/vultureanu-albisialexandra/Desktop/BIP_2025/bip_app/app_streamlit/runs/detect/train4/weights/best.pt"
+    "YOLOv8_10 Net Detector": "best_10.pt",
+    "YOLOv8_25 Net Detector": "best_25.pt",
+    "YOLOv8_50 Net Detector": "best_50.pt",
+    "YOLOv8_75 Net Detector": "best_75.pt"
 }
 
 
