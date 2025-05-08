@@ -396,7 +396,7 @@ elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
 
     cap.release()
 
-if st.sidebar.checkbox("🔄 Enable Webcam", key="webcam_key"):
+if st.sidebar.checkbox("🔄 Enable Webcam") and not st.secrets["IS_CLOUD"]:
 
     if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
         st.session_state["webcam_active"] = True
