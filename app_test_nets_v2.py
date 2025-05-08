@@ -30,7 +30,7 @@ def reset_widgets():
 st.sidebar.markdown("## About")
 st.sidebar.info("""
 This app was developed to assist in marine object detection and environmental metadata logging.
-You use YOLOv8-based models trained on custom underwater dataset.
+You use YOLOv8-based models pretrained on custom underwater dataset.
 """)
 
 
@@ -151,7 +151,7 @@ def encode_image_base64(path):
 
 # Buttons for augmentations
 augmentation_type = st.sidebar.radio(
-    "Choose Augmentation", 
+    "Choose Image Augmentation", 
     ["None", "Horizontal Flip", "Vertical Flip", "Random Crop", 
      "Change Colors", "Random Affine", "Gaussian Blur", "Random Erasing"],
      help="Apply real-time data augmentation before running object detection."
@@ -363,24 +363,6 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
             )
     else:
         st.warning("No annotations available to download yet.")
-
-
-elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
-    playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
-    stframe = st.empty()
-
-    # Read video directly from uploaded file with imageio
-    reader = imageio.get_reader(uploaded_file, format='ffmpeg')
-
-    for frame in reader:
-        results = model(frame)
-        frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-        stframe.image(frame, use_container_width=True)
-        time.sleep(playback_speed)
-
-    reader.close()
-
-
 
 st.markdown("""
         ## Contact
