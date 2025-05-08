@@ -398,11 +398,27 @@ elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
 
 IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
 if not IS_CLOUD:
-    # Safe to run webcam
-    run_webcam_code()
+    cam = cv2.VideoCapture(0)
+    stframe = st.empty()
+
+    while cam.isOpened():
+        ret, frame = cam.read()
+        if not ret:
+            break
+
+        results = model(frame, conf=conf_threshold)
+        frame = draw_bounding_boxes(frame, results)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        stframe.image(frame, channels="RGB", use_container_width=True)
+
+        if not st.session_state.get("webcam_active"):
+            break
+
+    cam.release()
 else:
     st.warning("Webcam access is not supported on Streamlit Cloud.")
-IS_CLOUD = st.secrets.get("IS_CLOUD", False)
+
 
 
 if st.sidebar.checkbox("🔄 Enable Webcam") and not st.secrets["IS_CLOUD"]:
