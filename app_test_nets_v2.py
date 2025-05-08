@@ -45,12 +45,12 @@ model_choice = st.sidebar.radio(
 
 # Map model choices to their corresponding file paths
 model_paths = {
-    "YOLOv5 Small": "models_yolo/yolov5su.pt",
-    "YOLOv8 Small": "models_yolo/yolov8n-oiv7.pt",
-    "YOLOv8_10 Net Detector": "best_10.pt",
-    "YOLOv8_25 Net Detector": "best_25.pt",
-    "YOLOv8_50 Net Detector": "best_50.pt",
-    "YOLOv8_75 Net Detector": "best_75.pt"
+    "YOLOv5 Small": "models/yolov5su.pt",
+    "YOLOv8 Small": "models/yolov8n-oiv7.pt",
+    "YOLOv8_10 Net Detector": "models/best_10.pt",
+    "YOLOv8_25 Net Detector": "models/best_25.pt",
+    "YOLOv8_50 Net Detector": "models/best_50.pt",
+    "YOLOv8_75 Net Detector": "models/best_75.pt"
 }
 
 
