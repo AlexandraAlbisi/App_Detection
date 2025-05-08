@@ -366,64 +366,24 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
         st.warning("No annotations available to download yet.")
 
 
+import imageio
+
+elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
+    playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
+    stframe = st.empty()
+
+    # Read video directly from uploaded file with imageio
+    reader = imageio.get_reader(uploaded_file, format='ffmpeg')
+
+    for frame in reader:
+        results = model(frame)
+        frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
+        stframe.image(frame, use_container_width=True)
+        time.sleep(playback_speed)
+
+    reader.close()
 
 
-# # Read uploaded video with imageio
-# elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
-#     playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
-    
-#     reader = imageio.get_reader(uploaded_file, 'ffmpeg')
-#     stframe = st.empty()
-
-#     for frame in reader:
-#         # Convert frame to numpy array (already done by imageio)
-#         results = model(frame)
-#         frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-#         stframe.image(frame, use_container_width=True)
-#         time.sleep(playback_speed)
-    
-#     reader.close()
-
-# # Detect cloud environment
-# IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
-
-# # Sidebar toggle for webcam
-# if st.sidebar.checkbox("🔄 Enable Webcam"):
-#     if IS_CLOUD:
-#         st.warning("Webcam access is supported via WebRTC on Streamlit Cloud.")
-#     else:
-#         st.success("Webcam is running locally with WebRTC.")
-
-#     # Define the video processor class
-#     class VideoProcessor(VideoProcessorBase):
-#         def __init__(self):
-#             self.conf_threshold = 0.25
-
-#         def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-#             image = frame.to_ndarray(format="bgr24")
-#             results = model(image, conf=self.conf_threshold)
-
-#             for result in results:
-#                 if result.boxes is not None:
-#                     for box in result.boxes:
-#                         x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
-#                         label = f"{model.names[int(box.cls[0])]} {box.conf[0]:.2f}"
-#                         cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-#                         cv2.putText(image, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
-#             return av.VideoFrame.from_ndarray(image, format="bgr24")
-
-#     # Start webcam stream
-#     ctx = webrtc_streamer(
-#         key="example",
-#         video_processor_factory=VideoProcessor,
-#         media_stream_constraints={"video": True, "audio": False},
-#         async_processing=True
-#     )
-
-#     # Update processor confidence threshold
-#     if ctx.video_processor:
-#         ctx.video_processor.conf_threshold = conf_threshold
 
 st.markdown("""
         ## Contact
