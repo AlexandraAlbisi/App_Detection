@@ -366,8 +366,6 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
         st.warning("No annotations available to download yet.")
 
 
-import imageio
-
 elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
     playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
     stframe = st.empty()
