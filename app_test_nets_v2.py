@@ -396,6 +396,15 @@ elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
 
     cap.release()
 
+IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
+if not IS_CLOUD:
+    # Safe to run webcam
+    run_webcam_code()
+else:
+    st.warning("Webcam access is not supported on Streamlit Cloud.")
+IS_CLOUD = st.secrets.get("IS_CLOUD", False)
+
+
 if st.sidebar.checkbox("🔄 Enable Webcam") and not st.secrets["IS_CLOUD"]:
 
     if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
