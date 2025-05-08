@@ -37,7 +37,7 @@ You use YOLOv8-based models trained on custom underwater dataset.
 st.sidebar.header("Model Selection")
 model_choice = st.sidebar.radio(
     "Choose a YOLO Model",
-    ["YOLOv5 Small", "YOLOv8 Small", "YOLOv8 Extra Large", "YOLOv8_10 Net Detector", "YOLOv8_25 Net Detector", "YOLOv8_50 Net Detector", "YOLOv8_75 Net Detector"],
+    ["YOLOv5 Small", "YOLOv8 Small", "YOLOv8_10 Net Detector", "YOLOv8_25 Net Detector", "YOLOv8_50 Net Detector", "YOLOv8_75 Net Detector"],
     key='model_choice',
     on_change=reset_widgets,  # Assign the callback function
     help="Select a pre-trained YOLO model. Larger models may be more accurate but slower."
@@ -47,7 +47,6 @@ model_choice = st.sidebar.radio(
 model_paths = {
     "YOLOv5 Small": "models_yolo/yolov5su.pt",
     "YOLOv8 Small": "models_yolo/yolov8n-oiv7.pt",
-    "YOLOv8 Extra Large": "models_yolo/yolov8x-oiv7.pt",
     "YOLOv8_10 Net Detector": "best_10.pt",
     "YOLOv8_25 Net Detector": "best_25.pt",
     "YOLOv8_50 Net Detector": "best_50.pt",
