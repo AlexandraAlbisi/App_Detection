@@ -213,7 +213,7 @@ conf_threshold = st.sidebar.slider("Confidence Threshold",
                                    )
 
 # Upload image or video
-uploaded_file = st.sidebar.file_uploader("Upload an Image or Video", type=["jpg", "jpeg", "png", "mp4", "avi"])
+uploaded_file = st.sidebar.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
 
 
 # Process image 
