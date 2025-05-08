@@ -16,6 +16,7 @@ import pydeck as pdk
 import os
 import base64
 import io
+import imageio
 
 # Initialize session state for model_choice and other widgets
 if 'model_choice' not in st.session_state:
@@ -365,37 +366,23 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
         st.warning("No annotations available to download yet.")
 
 
+
+
+# Read uploaded video with imageio
 elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
-    # Add a slider to control playback speed
     playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
-
-    temp_file = tempfile.NamedTemporaryFile(delete=False)
-    temp_file.write(uploaded_file.read())
-
-    cap = cv2.VideoCapture(temp_file.name)
+    
+    reader = imageio.get_reader(uploaded_file, 'ffmpeg')
     stframe = st.empty()
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Run YOLOv8 object detection on each frame
+    for frame in reader:
+        # Convert frame to numpy array (already done by imageio)
         results = model(frame)
-
-        # Draw bounding boxes
         frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-
-        # Convert to RGB for Streamlit
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Display the processed frame
         stframe.image(frame, use_container_width=True)
-
-        # Add Delay for slower playback
         time.sleep(playback_speed)
-
-    cap.release()
+    
+    reader.close()
 
 # Detect cloud environment
 IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
