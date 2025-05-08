@@ -11,3 +11,4 @@ pydeck
 matplotlib
 seaborn
 d2l
+imageio[ffmpeg]
