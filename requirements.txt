@@ -1,0 +1,11 @@
+streamlit
+ultralytics>=8.0.0
+opencv-python
+Pillow
+torch
+torchvision
+pandas
+pydeck
+matplotlib
+seaborn
+d2l==1.0.3
