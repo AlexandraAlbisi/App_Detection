@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 import cv2, time
 import tempfile
 import numpy as np
@@ -399,42 +400,50 @@ elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
 # Detect cloud environment
 IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
 
-# Webcam UI and control
+# Sidebar toggle for webcam
 if st.sidebar.checkbox("🔄 Enable Webcam"):
-
     if IS_CLOUD:
-        st.warning("Webcam access is not supported on Streamlit Cloud.")
+        st.warning("Webcam access is supported via WebRTC on Streamlit Cloud.")
     else:
-        if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
-            st.session_state["webcam_active"] = True
+        st.success("Webcam is running locally with WebRTC.")
 
-        if st.sidebar.button("🛑 Stop Webcam", key="stop_webcam_btn"):
-            st.session_state["webcam_active"] = False
+    # Slider for confidence threshold
+    conf_threshold = st.sidebar.slider("Confidence Threshold", 0.01, 0.99, 0.25, step=0.01)
 
-        if "webcam_active" not in st.session_state:
-            st.session_state["webcam_active"] = False
+    # Load your YOLO model (ensure it's loaded in the main app too)
+    from ultralytics import YOLO
+    model = YOLO("models_yolo/yolov8n.pt")  # Adjust to your model path
 
-        if st.session_state["webcam_active"]:
-            cam = cv2.VideoCapture(0)
-            stframe = st.empty()
+    # Define the video processor class
+    class VideoProcessor(VideoProcessorBase):
+        def __init__(self):
+            self.conf_threshold = 0.25
 
-            while cam.isOpened():
-                ret, frame = cam.read()
-                if not ret:
-                    break
+        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+            image = frame.to_ndarray(format="bgr24")
+            results = model(image, conf=self.conf_threshold)
 
-                results = model(frame, conf=0.1)  # Default confidence threshold
-                frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            for result in results:
+                if result.boxes is not None:
+                    for box in result.boxes:
+                        x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
+                        label = f"{model.names[int(box.cls[0])]} {box.conf[0]:.2f}"
+                        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                        cv2.putText(image, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-                stframe.image(frame, channels="RGB", use_container_width=True)
+            return av.VideoFrame.from_ndarray(image, format="bgr24")
 
-                if not st.session_state["webcam_active"]:
-                    st.warning("🛑 Webcam stopped.")
-                    break
+    # Start webcam stream
+    ctx = webrtc_streamer(
+        key="example",
+        video_processor_factory=VideoProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True
+    )
 
-            cam.release()
-
+    # Update processor confidence threshold
+    if ctx.video_processor:
+        ctx.video_processor.conf_threshold = conf_threshold
 
 st.markdown("""
         ## Contact
