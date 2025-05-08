@@ -394,13 +394,6 @@ if st.sidebar.checkbox("🔄 Enable Webcam"):
     else:
         st.success("Webcam is running locally with WebRTC.")
 
-    # Slider for confidence threshold
-    conf_threshold = st.sidebar.slider("Confidence Threshold", 0.01, 0.99, 0.25, step=0.01)
-
-    # Load your YOLO model (ensure it's loaded in the main app too)
-    from ultralytics import YOLO
-    model = YOLO("models_yolo/yolov8n.pt")  # Adjust to your model path
-
     # Define the video processor class
     class VideoProcessor(VideoProcessorBase):
         def __init__(self):
