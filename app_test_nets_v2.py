@@ -396,65 +396,44 @@ elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
 
     cap.release()
 
+# Detect cloud environment
+IS_CLOUD = os.environ.get("STREAMLIT_SERVER_HEADLESS", "0") == "1"
 
-if not IS_CLOUD:
-    cam = cv2.VideoCapture(0)
-    stframe = st.empty()
+# Webcam UI and control
+if st.sidebar.checkbox("🔄 Enable Webcam"):
 
-    while cam.isOpened():
-        ret, frame = cam.read()
-        if not ret:
-            break
+    if IS_CLOUD:
+        st.warning("Webcam access is not supported on Streamlit Cloud.")
+    else:
+        if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
+            st.session_state["webcam_active"] = True
 
-        results = model(frame, conf=conf_threshold)
-        frame = draw_bounding_boxes(frame, results)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        if st.sidebar.button("🛑 Stop Webcam", key="stop_webcam_btn"):
+            st.session_state["webcam_active"] = False
 
-        stframe.image(frame, channels="RGB", use_container_width=True)
+        if "webcam_active" not in st.session_state:
+            st.session_state["webcam_active"] = False
 
-        if not st.session_state.get("webcam_active"):
-            break
+        if st.session_state["webcam_active"]:
+            cam = cv2.VideoCapture(0)
+            stframe = st.empty()
 
-    cam.release()
-else:
-    st.warning("Webcam access is not supported on Streamlit Cloud.")
+            while cam.isOpened():
+                ret, frame = cam.read()
+                if not ret:
+                    break
 
+                results = model(frame, conf=0.1)  # Default confidence threshold
+                frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
+                stframe.image(frame, channels="RGB", use_container_width=True)
 
-if st.sidebar.checkbox("🔄 Enable Webcam") and not st.secrets["IS_CLOUD"]:
+                if not st.session_state["webcam_active"]:
+                    st.warning("🛑 Webcam stopped.")
+                    break
 
-    if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
-        st.session_state["webcam_active"] = True
-
-    if st.sidebar.button("🛑 Stop Webcam", key="stop_webcam_btn"):
-        st.session_state["webcam_active"] = False
-
-    # Ensure the state exists
-    if "webcam_active" not in st.session_state:
-        st.session_state["webcam_active"] = False
-
-    # Run the webcam only if it's active
-    if st.session_state["webcam_active"]:
-        cam = cv2.VideoCapture(0)
-        stframe = st.empty()
-
-        while cam.isOpened():
-            ret, frame = cam.read()
-            if not ret:
-                break
-
-            results = model(frame, conf=conf_threshold)
-            frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            stframe.image(frame, channels="RGB", use_container_width=True)
-
-            # Break if the stop button was clicked during loop
-            if not st.session_state["webcam_active"]:
-                st.warning("🛑 Webcam stopped.")
-                break
-
-        cam.release()
+            cam.release()
 
 
 st.markdown("""
