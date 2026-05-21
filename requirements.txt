@@ -8,6 +8,5 @@ torchvision
 pandas
 pydeck
 matplotlib
-seaborn
-d2l
 imageio[ffmpeg]
+d2l==1.0.3
