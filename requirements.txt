@@ -1,5 +1,4 @@
 streamlit
-d2l==1.0.3
 torch==2.2.2
 torchvision==0.17.2
 ultralytics==8.3.0
