@@ -432,7 +432,8 @@ if st.sidebar.checkbox("🔄 Enable Webcam", key="webcam_key"):
             if not ret:
                 break
 
-            results = model(frame, conf=conf_threshold)
+            #results = model(frame, conf=conf_threshold)
+            results = model.predict(frame, conf=conf_threshold, verbose=False)
             frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
