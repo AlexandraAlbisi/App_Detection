@@ -6,7 +6,6 @@ import torch
 from PIL import Image
 from ultralytics import YOLO
 import torchvision.transforms as transforms
-from d2l import torch as d2l 
 import torchvision.transforms.functional as TF
 import pandas as pd
 import seaborn as sns
@@ -15,7 +14,6 @@ import pydeck as pdk
 import os
 import base64
 import io
-import imageio
 
 # Initialize session state for model_choice and other widgets
 if 'model_choice' not in st.session_state:
@@ -30,7 +28,7 @@ def reset_widgets():
 st.sidebar.markdown("## About")
 st.sidebar.info("""
 This app was developed to assist in marine object detection and environmental metadata logging.
-You use YOLOv8-based models pretrained on custom underwater dataset.
+You use YOLOv8-based models trained on custom underwater dataset.
 """)
 
 
@@ -38,7 +36,7 @@ You use YOLOv8-based models pretrained on custom underwater dataset.
 st.sidebar.header("Model Selection")
 model_choice = st.sidebar.radio(
     "Choose a YOLO Model",
-    ["YOLOv5 Small", "YOLOv8 Small", "YOLOv8_10 Net Detector", "YOLOv8_25 Net Detector", "YOLOv8_50 Net Detector", "YOLOv8_75 Net Detector"],
+    ["YOLOv5 Small", "YOLOv8 Small", "YOLOv8 Extra Large", "YOLOv8_10 Net Detector", "YOLOv8_25 Net Detector", "YOLOv8_50 Net Detector", "YOLOv8_75 Net Detector"],
     key='model_choice',
     on_change=reset_widgets,  # Assign the callback function
     help="Select a pre-trained YOLO model. Larger models may be more accurate but slower."
@@ -55,6 +53,7 @@ model_paths = {
 }
 
 
+
 # Load the selected model
 model_path = model_paths.get(st.session_state.model_choice)
 if model_path:
@@ -68,75 +67,53 @@ else:
 #🎣 🧵 🐠 🐟 🐡
 st.title("🐠🧵🐡🎣App Detection🎣🐡🧵🐠")
 
-# Define D2L Augmentations
-def flip_image_d2l(image, flip_type):
-    """Flip image using D2L's augmentation."""
-    try:
-        image_tensor = TF.to_tensor(image)
-        if flip_type == "Horizontal Flip":
-            transform = d2l.transforms.RandomHorizontalFlip(p=1.0)  
-        elif flip_type == "Vertical Flip":
-            transform = d2l.transforms.RandomVerticalFlip(p=1.0) 
-        else:
-            return image 
-        flipped_tensor = transform(image_tensor)
-        return TF.to_pil_image(flipped_tensor)
-    except Exception as e:
-        st.error(f"Error during image augmentation: {e}")
-        return image
+
+def flip_image(image, flip_type):
+    if flip_type == "Horizontal Flip":
+        return transforms.RandomHorizontalFlip(p=1.0)(image)
+    elif flip_type == "Vertical Flip":
+        return transforms.RandomVerticalFlip(p=1.0)(image)
+    return image
 
 
-def crop_image_d2l(image):
-    """Randomly crop the image using D2L-based augmentation."""
-    try:
-        image_tensor = TF.to_tensor(image)  # Convert PIL to tensor
-        cropped_tensor = d2l.transforms.RandomResizedCrop(size=(image_tensor.shape[1], image_tensor.shape[2]))(image_tensor)
-        return TF.to_pil_image(cropped_tensor)  # Convert back to PIL
-    except Exception as e:
-        st.error(f"Error during image augmentation: {e}")
-        return image
+def crop_image(image):
+    return transforms.RandomResizedCrop(size=(640, 640))(image)
 
 
-def change_colors_d2l(image, brightness=1.0, contrast=1.0, saturation=1.0, hue=0.0):
-    """Adjust brightness, contrast, saturation, and hue using D2L."""
-    try:
-        transform = transforms.ColorJitter(brightness=brightness, contrast=contrast, saturation=saturation, hue=hue)
-        return transform(image)
-    except Exception as e:
-        st.error(f"Error during color adjustment: {e}")
-        return image
-    
-def random_affine_d2l(image, degrees=15, translate=0.1, scale=1, shear=10):
-    try:
-        transform = d2l.transforms.RandomAffine(degrees=degrees, translate=(translate, translate), scale=(scale, scale), shear=shear)
-        return transform(image)
-    except Exception as e:
-        st.error(f"Error during random affine: {e}")
-        return TF.to_pil_image(image)
-
-def gaussian_blur_d2l(image, kernel_size, sigma):
-    try:
-        image_tensor = TF.to_tensor(image)  # Convert PIL to tensor
-        transform = d2l.transforms.GaussianBlur(kernel_size=kernel_size, sigma=sigma)
-        blurred_tensor = transform(image_tensor)
-        return TF.to_pil_image(blurred_tensor)  # Convert back to PIL
-    except Exception as e:
-        st.error(f"Error during gaussian blur: {e}")
-        return image
+def change_colors(image, brightness=1.0, contrast=1.0,
+                  saturation=1.0, hue=0.0):
+    transform = transforms.ColorJitter(
+        brightness=brightness,
+        contrast=contrast,
+        saturation=saturation,
+        hue=hue
+    )
+    return transform(image)
 
 
-def random_erasing_d2l(image, scale_min=0.02, scale_max=0.33):
-    """Apply random erasing using D2L with scale range."""
-    try:
-        # Convert to tensor and add batch dimension
-        image_tensor = TF.to_tensor(image).unsqueeze(0)
-        transform = d2l.transforms.RandomErasing(scale=(scale_min, scale_max), value='random')
-        erased_tensor = transform(image_tensor)
-        return TF.to_pil_image(erased_tensor.squeeze(0))
-    except Exception as e:
-        st.error(f"Error during random erasing: {e}")
-        return image
-    
+def random_affine(image, degrees=15, translate=0.1, scale=1.0, shear=10):
+    transform = transforms.RandomAffine(
+        degrees=degrees,
+        translate=(translate, translate),
+        scale=(scale, scale),
+        shear=shear
+    )
+    return transform(image)
+
+
+def gaussian_blur(image, kernel_size=(5, 5), sigma=1.0):
+    return transforms.GaussianBlur(kernel_size=kernel_size, sigma=sigma)(image)
+
+
+def random_erasing(image, scale_min=0.02, scale_max=0.33):
+    image_tensor = TF.to_tensor(image)
+    transform = transforms.RandomErasing(
+        p=1.0,
+        scale=(scale_min, scale_max),
+        value="random"
+    )
+    erased_tensor = transform(image_tensor)
+    return TF.to_pil_image(erased_tensor)
 
 def encode_image_base64(path):
     try:
@@ -151,7 +128,7 @@ def encode_image_base64(path):
 
 # Buttons for augmentations
 augmentation_type = st.sidebar.radio(
-    "Choose Image Augmentation", 
+    "Choose Augmentation", 
     ["None", "Horizontal Flip", "Vertical Flip", "Random Crop", 
      "Change Colors", "Random Affine", "Gaussian Blur", "Random Erasing"],
      help="Apply real-time data augmentation before running object detection."
@@ -213,7 +190,7 @@ conf_threshold = st.sidebar.slider("Confidence Threshold",
                                    )
 
 # Upload image or video
-uploaded_file = st.sidebar.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.sidebar.file_uploader("Upload an Image or Video", type=["jpg", "jpeg", "png", "mp4", "avi"])
 
 
 # Process image 
@@ -236,21 +213,34 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
     # Explicit resizing
     image = image.resize((640, 640))
 
+
+
+
+
+
     # Apply chosen augmentation
     if augmentation_type == "Horizontal Flip":
-        augmented_image = flip_image_d2l(image, "Horizontal Flip")
+        #augmented_image = flip_image_d2l(image, "Horizontal Flip")
+        augmented_image = flip_image(image, "Horizontal Flip")
     elif augmentation_type == "Vertical Flip":
-        augmented_image = flip_image_d2l(image, "Vertical Flip")
+        #augmented_image = flip_image_d2l(image, "Vertical Flip")
+        augmented_image = flip_image(image, "Vertical Flip")
     elif augmentation_type == "Random Crop":
-        augmented_image = crop_image_d2l(image)
+        #augmented_image = crop_image_d2l(image)
+        augmented_image = crop_image(image)
     elif augmentation_type == "Change Colors":
-        augmented_image = change_colors_d2l(image, brightness, contrast, saturation, hue)
+        augmented_image = change_colors(image, brightness, contrast, saturation, hue)
+        #augmented_image = change_colors_d2l(image, brightness, contrast, saturation, hue)
+        
     elif augmentation_type == "Random Affine":
-        augmented_image = random_affine_d2l(image, degrees, translate, scale, shear)
+        #augmented_image = random_affine_d2l(image, degrees, translate, scale, shear)
+        augmented_image = random_affine(image, degrees, translate, scale, shear)
     elif augmentation_type == "Gaussian Blur":
-        augmented_image = gaussian_blur_d2l(image, kernel_size, sigma)
+        #augmented_image = gaussian_blur_d2l(image, kernel_size, sigma)
+        augmented_image = gaussian_blur(image, kernel_size, sigma)
     elif augmentation_type == "Random Erasing":
-        augmented_image = random_erasing_d2l(image, scale_min, scale_max)
+        #augmented_image = random_erasing_d2l(image, scale_min, scale_max)
+        augmented_image = random_erasing(image, scale_min, scale_max)
     else:
         augmented_image = image
 
@@ -258,15 +248,38 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
     # 
         
     image_np = np.array(image)  # Convert to numpy array
-    augmented_np = np.array(augmented_image)
-    # Convert RGB (PIL/Streamlit) to BGR (YOLO expects BGR when using OpenCV images)
-    image_bgr = cv2.cvtColor(augmented_np, cv2.COLOR_RGB2BGR)
+    # augmented_np = np.array(augmented_image)
+    # # Convert RGB (PIL/Streamlit) to BGR (YOLO expects BGR when using OpenCV images)
+    # image_bgr = cv2.cvtColor(augmented_np, cv2.COLOR_RGB2BGR)
 
-    # Run YOLOv8 detection
-    results = model(image_bgr, conf=conf_threshold)
+    # # Run YOLOv8 detection
+    # results = model(image_bgr, conf=conf_threshold)
+    # Convert augmented image safely to RGB numpy
+
+# Convert augmented image safely to RGB numpy
+# Convert augmented image safely before YOLO prediction
+    if isinstance(augmented_image, torch.Tensor):
+        augmented_image = TF.to_pil_image(augmented_image)
+
+    if augmented_image.mode != "RGB":
+        augmented_image = augmented_image.convert("RGB")
+
+    augmented_np = np.array(augmented_image)
+
+    if augmented_np.dtype != np.uint8:
+        augmented_np = augmented_np.astype(np.uint8)
+
+    # Run YOLO detection
+    results = model(augmented_np, conf=conf_threshold)
 
     # Draw bounding boxes
-    image_with_boxes = draw_bounding_boxes(image_bgr.copy(), results)
+    image_with_boxes = draw_bounding_boxes(augmented_np.copy(), results)
+
+# Display directly, no BGR/RGB conversion needed
+
+    # Draw bounding boxes
+    #image_with_boxes = draw_bounding_boxes(image_bgr.copy(), results)
+    image_with_boxes = draw_bounding_boxes(augmented_np.copy(), results)        
 
     # Convert images to RGB for Streamlit
     image_with_boxes = cv2.cvtColor(image_with_boxes, cv2.COLOR_BGR2RGB)
@@ -363,6 +376,75 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
             )
     else:
         st.warning("No annotations available to download yet.")
+
+
+elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
+    # Add a slider to control playback speed
+    playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    temp_file.write(uploaded_file.read())
+
+    cap = cv2.VideoCapture(temp_file.name)
+    stframe = st.empty()
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Run YOLOv8 object detection on each frame
+        results = model(frame)
+
+        # Draw bounding boxes
+        frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
+
+        # Convert to RGB for Streamlit
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Display the processed frame
+        stframe.image(frame, use_container_width=True)
+
+        # Add Delay for slower playback
+        time.sleep(playback_speed)
+
+    cap.release()
+
+if st.sidebar.checkbox("🔄 Enable Webcam", key="webcam_key"):
+
+    if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
+        st.session_state["webcam_active"] = True
+
+    if st.sidebar.button("🛑 Stop Webcam", key="stop_webcam_btn"):
+        st.session_state["webcam_active"] = False
+
+    # Ensure the state exists
+    if "webcam_active" not in st.session_state:
+        st.session_state["webcam_active"] = False
+
+    # Run the webcam only if it's active
+    if st.session_state["webcam_active"]:
+        cam = cv2.VideoCapture(0)
+        stframe = st.empty()
+
+        while cam.isOpened():
+            ret, frame = cam.read()
+            if not ret:
+                break
+
+            results = model(frame, conf=conf_threshold)
+            frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            stframe.image(frame, channels="RGB", use_container_width=True)
+
+            # Break if the stop button was clicked during loop
+            if not st.session_state["webcam_active"]:
+                st.warning("🛑 Webcam stopped.")
+                break
+
+        cam.release()
+
 
 st.markdown("""
         ## Contact
