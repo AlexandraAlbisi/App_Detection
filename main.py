@@ -46,12 +46,12 @@ model_choice = st.sidebar.radio(
 model_paths = {
     "YOLOv5 Small": "models/yolov5su.pt",
     "YOLOv8 Small": "models/yolov8n-oiv7.pt",
+    "YOLOv8 Extra Large": "models/yolov8x-oiv7.pt",
     "YOLOv8_10 Net Detector": "models/best_10.pt",
     "YOLOv8_25 Net Detector": "models/best_25.pt",
     "YOLOv8_50 Net Detector": "models/best_50.pt",
     "YOLOv8_75 Net Detector": "models/best_75.pt"
 }
-
 
 
 # Load the selected model
@@ -273,7 +273,7 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
     results = model(augmented_np, conf=conf_threshold)
 
     # Draw bounding boxes
-    image_with_boxes = draw_bounding_boxes(augmented_np.copy(), results)
+    #image_with_boxes = draw_bounding_boxes(augmented_np.copy(), results)
 
 # Display directly, no BGR/RGB conversion needed
 
@@ -282,7 +282,7 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
     image_with_boxes = draw_bounding_boxes(augmented_np.copy(), results)        
 
     # Convert images to RGB for Streamlit
-    image_with_boxes = cv2.cvtColor(image_with_boxes, cv2.COLOR_BGR2RGB)
+    st.image(image_with_boxes, use_container_width=True)
     # ------------------------------
 
     # Display Images
