@@ -1,4 +1,3 @@
-import platform
 import streamlit as st
 import cv2, time
 import tempfile
@@ -214,11 +213,6 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
     # Explicit resizing
     image = image.resize((640, 640))
 
-
-
-
-
-
     # Apply chosen augmentation
     if augmentation_type == "Horizontal Flip":
         #augmented_image = flip_image_d2l(image, "Horizontal Flip")
@@ -377,91 +371,6 @@ if uploaded_file and uploaded_file.type in ["image/jpeg", "image/png", "image/jp
             )
     else:
         st.warning("No annotations available to download yet.")
-
-
-elif uploaded_file and uploaded_file.type in ["video/mp4", "video/avi"]:
-    # Add a slider to control playback speed
-    playback_speed = st.sidebar.slider("Playback Speed (Seconds per Frame)", 0.01, 0.5, 0.1, step=0.01)
-
-    temp_file = tempfile.NamedTemporaryFile(delete=False)
-    temp_file.write(uploaded_file.read())
-
-    cap = cv2.VideoCapture(temp_file.name)
-    stframe = st.empty()
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Run YOLOv8 object detection on each frame
-        results = model(frame)
-
-        # Draw bounding boxes
-        frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-
-        # Convert to RGB for Streamlit
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Display the processed frame
-        stframe.image(frame, use_container_width=True)
-
-        # Add Delay for slower playback
-        time.sleep(playback_speed)
-
-    cap.release()
-
-if st.sidebar.checkbox("🔄 Enable Webcam", key="webcam_key"):
-
-    if st.sidebar.button("🎥 Start Webcam", key="start_webcam_btn"):
-        st.session_state["webcam_active"] = True
-
-    if st.sidebar.button("🛑 Stop Webcam", key="stop_webcam_btn"):
-        st.session_state["webcam_active"] = False
-
-    # Ensure the state exists
-    if "webcam_active" not in st.session_state:
-        st.session_state["webcam_active"] = False
-
-    # Run the webcam only if it's active
-    if st.session_state["webcam_active"]:
-        # Open webcam depending on operating system
-        cam = cv2.VideoCapture(0)
-        
-        if not cam.isOpened():
-            system = platform.system()
-        
-            if system == "Windows":
-                cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-            elif system == "Darwin":  # macOS
-                cam = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
-            else:  # Linux
-                cam = cv2.VideoCapture(0)
-        
-        if not cam.isOpened():
-            st.error("Unable to access the webcam.")
-            st.stop()
-        stframe = st.empty()
-
-        while cam.isOpened():
-            ret, frame = cam.read()
-            if not ret:
-                break
-
-            #results = model(frame, conf=conf_threshold)
-            results = model.predict(frame, conf=conf_threshold, verbose=False)
-            frame = draw_bounding_boxes(frame, results, show_streamlit_output=True)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            stframe.image(frame, channels="RGB", use_container_width=True)
-
-            # Break if the stop button was clicked during loop
-            if not st.session_state["webcam_active"]:
-                st.warning("🛑 Webcam stopped.")
-                break
-
-        cam.release()
-
 
 st.markdown("""
         ## Contact
