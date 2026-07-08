@@ -1,3 +1,4 @@
+import platform
 import streamlit as st
 import cv2, time
 import tempfile
@@ -424,7 +425,22 @@ if st.sidebar.checkbox("🔄 Enable Webcam", key="webcam_key"):
 
     # Run the webcam only if it's active
     if st.session_state["webcam_active"]:
+        # Open webcam depending on operating system
         cam = cv2.VideoCapture(0)
+        
+        if not cam.isOpened():
+            system = platform.system()
+        
+            if system == "Windows":
+                cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+            elif system == "Darwin":  # macOS
+                cam = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
+            else:  # Linux
+                cam = cv2.VideoCapture(0)
+        
+        if not cam.isOpened():
+            st.error("Unable to access the webcam.")
+            st.stop()
         stframe = st.empty()
 
         while cam.isOpened():
